@@ -3,13 +3,59 @@ import random
 from pathlib import Path
 from copy import copy
 from datetime import datetime
+from enum import StrEnum
 
 HISTORY_FILE = "history.json"
+DATA_FILE = "data.json"
 
-type Selection = list[str]
-type History = dict[str, Selection]
-type Dish = str | dict[str, str|list[str]]
-type DishList = list[Dish]
+type DishSelection = list[str]|set[str]|tuple[str]
+type History = dict[str, DishSelection]
+
+class Dish(dict):
+    class Category(StrEnum):
+        MEAT = "meat"
+        HOT_STARTER = "hot starter"
+        READY_MEAL = "ready meal"
+    
+    class PreparationMethod(StrEnum):
+        MICROWAVE = "microwave"
+        OVEN = "oven"
+        FRYING_PAN = "frying pan"
+
+    def __new__(cls, name: str, category: 'Dish.Category', preparation_method: list['Dish.PreparationMethod']):
+        instance = super().__new__(cls)
+        instance.update(
+            name=str(name),
+            category=category.value if isinstance(category, Dish.Category) else str(category),
+            preparation_method=[
+                prep.value if isinstance(prep, Dish.PreparationMethod) else str(prep)
+                for prep in preparation_method
+            ])
+        return instance
+    
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Dish':
+        return cls(
+            name=str(data['name']),
+            category=cls.Category(data['category']),
+            preparation_method=tuple(data['preparation method'])
+        )
+
+    def __repr__(self):
+        return f"Dish(name='{self['name']}', category='{self['category'].value}', preparation_method={self['preparation_method']})"
+
+type DishList = list[Dish]|tuple[Dish]
+
+def dishes_by(key: str, dishes: DishList) -> dict[str: DishSelection]:
+    """
+    Retourne un dictionnaire dont les clés sont les valeurs de la clé donnée et les valeurs sont des listes de noms de plats.
+    """
+    selection = {}
+    for dish in dishes:
+        if dish[key] not in selection:
+            selection[dish[key]] = []
+        selection[dish[key]].append(dish['name'])
+    return selection
 
 class PositiveInteger(int):
     def __new__(cls, value):
@@ -36,16 +82,34 @@ def write_json_file(file_path: Path | str, data: dict)-> None:
     with open(file_path, 'w') as file:
         json.dump(data, file, indent=4)
 
-def add_to_history(dishes_selection: Selection) -> Selection:
+def read_dishesfile()-> DishList:
+    """
+    Lit un fichier JSON contenant la liste des plats et retourne une liste de Dish.
+    """
+    data = read_json_file(DATA_FILE)
+    return [Dish.from_dict(dish) for dish in data]
+
+def read_history() -> History:
+    """
+    Lit l'historique des sélections de plats.
+    """
+    try:
+        return read_json_file(HISTORY_FILE)
+    except FileNotFoundError:
+        with open(HISTORY_FILE, 'w') as file:
+            json.dump({}, file)
+        return {}
+
+def add_to_history(dishes_selection: DishSelection) -> DishSelection:
     """
     Ajoute la sélection des plats à l'historique.
     """
     data = read_json_file(HISTORY_FILE)
-    data[datetime.now()] = dishes_selection #.strftime("%Y-%m-%d %H:%M:%S")
+    data[datetime.now().strftime("%d-%m-%Y %H:%M:%S")] = list(dishes_selection)
     write_json_file(HISTORY_FILE, data)
     return dishes_selection
 
-def random_selection(dishes : list[str] | DishList, nb : PositiveInteger, can_repeate : bool = False) -> Selection:
+def random_selection(dishes : list[str] | DishList, nb : PositiveInteger, can_repeate : bool = False) -> DishSelection:
     """
     Retourne une sélection aléatoire de nb plats de la liste des plats donnée.
     Si can_repeate est True, la sélection peut contenir des plats en double.
@@ -66,33 +130,43 @@ def random_selection(dishes : list[str] | DishList, nb : PositiveInteger, can_re
     tmp += random.sample(dishes, nb)
     return tmp
 
-def intelligent_selection(dishes : DishList, nb : PositiveInteger) -> Selection:
+def intelligent_selection(nb : PositiveInteger) -> DishSelection:
     """
     Retourne une sélection intelligente de nb plats de la liste des plats donnée.
     """
     nb = PositiveInteger(nb)
-    history = read_json_file(HISTORY_FILE)
-    most_recent_selection = history[list(history.keys())[-1]] or []
-    valable_dishes = [dish for dish in dishes if dish['name'] not in most_recent_selection]
+    history = read_history()
+    most_recent_selection = history[list(history.keys())[-1]] if len(history) > 0 else []
+    valable_dishes = [
+        dish
+        for dish in read_dishesfile()
+        if dish['name'] not in most_recent_selection
+    ]
+
     # requirements:
     # - avoid repeating dishes
     # - have a minimum of 1 element of each category
     # - have a minimum of 1 element of each preparation method
 
-    dishes_by_category = {}
-    for dish in valable_dishes:
-        if dish['category'] not in dishes_by_category:
-            dishes_by_category[dish['category']] = []
-        dishes_by_category[dish['category']].append(dish['name'])
+    dishes_by_category = dishes_by('category', valable_dishes)
+    dishes_by_preparation_method = dishes_by('preparation_method', valable_dishes)
     
-    selection: Selection = []
-    nb_categories = len(dishes_by_category)
-    for category, dishes in dishes_by_category.items():
-        if len(selection) >= nb:
-            break
-        nb_category = min(nb - len(selection), len(dishes))
-        selection += random.sample(dishes, nb_category)
-        
-    print(selection)
-    # temporary solution:
-    return random_selection(valable_dishes, nb)
+    selection: DishSelection = set()
+    for _, category_dishes in dishes_by_category.items():
+        for _, preparation_method_dishes in dishes_by_preparation_method.items():
+            if len(selection) >= nb:
+                break
+            try:
+                selection.update(
+                    random.sample(
+                        list((set(category_dishes) & set(preparation_method_dishes)) - selection),
+                        nb//len(dishes_by_category)
+                    )
+                )
+            except ValueError:
+                pass
+    
+    if (nb:=nb - len(selection)) > 0:
+        selection.update(random_selection(valable_dishes, nb, can_repeate=True))
+
+    return selection

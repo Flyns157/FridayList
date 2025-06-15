@@ -162,3 +162,5 @@ cython_debug/
 app.egg-info
 *.pyc
 *.lnk
+
+history.json
