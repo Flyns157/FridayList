@@ -1,25 +1,92 @@
-{
-    "dishes" : [
-        "cordons bleus",
-        "quiche aux poireaux",
-        "spaghettis bolognaise",
-        "spaghettis carbonara",
-        "carbonnade flamande",
-        "crêpe fourrée",
-        "steak haché",
-        "lasagnes",
-        "veau marengo",
-        "croissant fourré",
-        "tranches de jambon",
-        "poule au riz",
-        "macaronis boulettes",
-        "paupiettes de veau",
-        "tagliatelles saumon",
-        "dos de cabillaud",
-        "croziflette",
-        "tartiflette",
-        "filet de poulet",
-        "ficelle picarde",
-        "roti de dinde orloff"
-    ]
-}
+[
+    {
+        "name": "cordons bleus",
+        "category": "meat",
+        "preparation method": ["oven", "frying pan"]
+    },
+    {
+        "name": "spaghettis bolognaise",
+        "category": "ready meal",
+        "preparation method": ["microwave"]
+    },
+    {
+        "name": "spaghettis carbonara",
+        "category": "ready meal",
+        "preparation method": ["microwave"]
+    },
+    {
+        "name": "carbonnade flamande",
+        "category": "meat",
+        "preparation method": ["microwave"]
+    },
+    {
+        "name": "crêpe fourrée",
+        "category": "hot starter",
+        "preparation method": ["oven"]
+    },
+    {
+        "name": "steak haché",
+        "category": "meat",
+        "preparation method": ["frying pan"]
+    },
+    {
+        "name": "lasagnes",
+        "category": "ready meal",
+        "preparation method": ["oven"]
+    },
+    {
+        "name": "veau marengo",
+        "category": "meat",
+        "preparation method": ["microwave"]
+    },
+    {
+        "name": "croissant fourré",
+        "category": "hot starter",
+        "preparation method": ["oven"]
+    },
+    {
+        "name": "tranches de jambon",
+        "category": "meat",
+        "preparation method": []
+    },
+    {
+        "name": "poule au riz",
+        "category": "ready meal",
+        "preparation method": ["microwave"]
+    },
+    {
+        "name": "macaronis boulettes",
+        "category": "ready meal",
+        "preparation method": ["microwave"]
+    },
+    {
+        "name": "paupiettes de veau",
+        "category": "meat",
+        "preparation method": ["oven", "frying pan"]
+    },
+    {
+        "name": "tagliatelles saumon",
+        "category": "ready meal",
+        "preparation method": ["microwave"]
+    },
+    {
+        "name": "dos de cabillaud",
+        "category": "meat",
+        "preparation method": ["microwave"]
+    },
+    {
+        "name": "tartiflette",
+        "category": "ready meal",
+        "preparation method": ["microwave", "oven"]
+    },
+    {
+        "name": "filet de poulet",
+        "category": "meat",
+        "preparation method": ["frying pan", "oven"]
+    },
+    {
+        "name": "ficelle picarde",
+        "category": "hot starter",
+        "preparation method": ["oven"]
+    }
+]
